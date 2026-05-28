@@ -72,13 +72,16 @@ if [[ $(ls "${DATA_DIR}"/trip_data-part*.csv 2>/dev/null | wc -l) -eq 0 ]]; then
     exit 1
 fi
 
-SCRIPT="$(dirname "$(realpath "$0")")/RunTaxiTrips.py"
+# SLURM copies the job script to a temp spool dir, so $0 is not the repo path.
+# Use SLURM_SUBMIT_DIR (the directory sbatch was run from) instead.
+REPO_DIR="${SLURM_SUBMIT_DIR:?SLURM_SUBMIT_DIR is not set — run via sbatch, not bash}"
+SCRIPT="${REPO_DIR}/solutions/problem_2/RunTaxiTrips.py"
 if [[ ! -f "${SCRIPT}" ]]; then
     echo "ERROR: RunTaxiTrips.py not found at ${SCRIPT}"
     exit 1
 fi
 
 # ── Run ───────────────────────────────────────────────────────────────────────
-cd "${SLURM_SUBMIT_DIR:-$(dirname "${SCRIPT}")}"
+cd "${REPO_DIR}"
 
 python "${SCRIPT}" "${DATA_DIR}"
