@@ -24,3 +24,6 @@ target/
 spark-warehouse/
 metastore_db/
 derby.log
+
+data/problem_2/*
+!data/problem_2/.gitignore

@@ -1,0 +1,258 @@
+## How to Run
+
+1. Navigate to solutions/problem_2/ and launch Jupyter:
+     jupyter notebook RunTaxiTrips.ipynb
+2. Run all cells in order top-to-bottom (Kernel → Restart & Run All).
+
+Required data files (relative to solutions/problem_2/):
+  ../../data/problem_2/trip_data-part*.csv
+  ../../data/problem_2/nyc-borough-boundaries-polygon.geojson.json
+
+Note: The notebook applies a day-13 filter before caching to keep memory usage
+manageable on a local machine (all 4 CSV parts together exceed local JVM heap when
+fully cached). To obtain results over the entire recorded period for (a) and (b),
+remove the `.filter(lambda x: x[1].pickupTime.day == 13)` line in cell-04-load
+and run on the IRIS HPC cluster.
+
+Clean trips loaded (day-13 sample, duration 0–3 h, valid coordinates): 433,927
+
+--------------------------------------------------------------------------------
+## (a) Trips starting and ending in the SAME borough
+--------------------------------------------------------------------------------
+
+Borough          Count       Sum (s)          Mean (s)
+Bronx                159          76,924           483.8
+Brooklyn           9,963       5,884,020           590.6
+Manhattan        355,909     191,487,202           538.0
+Queens             6,366       4,191,253           658.4
+Staten Island          8           3,812           476.5
+
+--------------------------------------------------------------------------------
+## (b) Trips starting and ending in DIFFERENT boroughs
+--------------------------------------------------------------------------------
+
+Origin          -> Destination      Count       Sum (s)          Mean (s)
+Bronx           -> Manhattan           67          56,465           842.8
+Bronx           -> Queens               7           6,512           930.3
+Brooklyn        -> Bronx               17          27,870         1,639.4
+Brooklyn        -> Manhattan        5,449       6,334,602         1,162.5
+Brooklyn        -> Queens             927         955,792         1,031.1
+Brooklyn        -> Staten Island        4           5,241         1,310.2
+Manhattan       -> Bronx            1,838       2,269,163         1,234.6
+Manhattan       -> Brooklyn        16,683      22,977,118         1,377.3
+Manhattan       -> Queens          16,790      21,816,602         1,299.4
+Manhattan       -> Staten Island       67         135,883         2,028.1
+Queens          -> Bronx              427         678,419         1,588.8
+Queens          -> Brooklyn         2,631       3,898,837         1,481.9
+Queens          -> Manhattan       14,365      21,218,500         1,477.1
+Queens          -> Staten Island       17          38,253         2,250.2
+Staten Island   -> Manhattan            3           3,508         1,169.3
+Staten Island   -> Queens               1           1,200         1,200.0
+
+Cross-borough trips are substantially longer on average (~1,000–2,250 s) compared
+to same-borough trips (~480–660 s), consistent with longer distances between boroughs.
+
+--------------------------------------------------------------------------------
+## (c) Average wait-time between consecutive trips per borough and hour-of-day
+--------------------------------------------------------------------------------
+
+Grouped by the borough of the first trip's pickup location and the hour at which
+that first trip started. Only non-negative wait-times included. Full table:
+
+Borough          Hour   Count   Mean wait (s)
+None             00        57       2,649.1
+None             01        59       3,624.4
+None             02        60       3,197.5
+None             03        55       6,678.6
+None             04        40      11,839.0
+None             05        17      18,867.9
+None             06        16       3,766.4
+None             07        12       3,591.6
+None             08        20       1,698.1
+None             09        25       1,114.0
+None             10        34       1,148.4
+None             11        28         885.9
+None             12        42         942.1
+None             13        31       1,778.1
+None             14        27       1,067.6
+None             15        33       1,114.3
+None             16        25       1,230.4
+None             17        36       1,822.2
+None             18        22       2,084.2
+None             19        28       1,390.2
+None             20        27       1,387.3
+None             21        29       1,584.1
+None             22        27         952.8
+None             23         8         655.9
+Bronx            00        20       6,275.2
+Bronx            01        10       1,145.9
+Bronx            02        15      13,209.9
+Bronx            03        12      16,355.6
+Bronx            04        17      17,596.2
+Bronx            05         8      11,488.1
+Bronx            06         6       2,612.8
+Bronx            07         4       1,197.0
+Bronx            08        10         852.4
+Bronx            09         9       1,241.8
+Bronx            10        10         625.2
+Bronx            11         8       1,680.2
+Bronx            12         4       2,993.5
+Bronx            13         4       3,295.8
+Bronx            14        11         935.0
+Bronx            15         7         788.6
+Bronx            16        12         410.0
+Bronx            17        18         601.6
+Bronx            18         6       3,203.5
+Bronx            19        14       1,320.1
+Bronx            20         4         502.5
+Bronx            21         4       2,912.2
+Bronx            22         4       1,871.5
+Bronx            23         3       1,039.0
+Brooklyn         00     2,146         937.2
+Brooklyn         01     2,351       1,647.8
+Brooklyn         02     2,008       2,382.0
+Brooklyn         03     1,320       4,681.5
+Brooklyn         04       664      11,296.1
+Brooklyn         05       237      12,193.4
+Brooklyn         06       126       3,810.3
+Brooklyn         07       205       2,175.2
+Brooklyn         08       219       2,101.9
+Brooklyn         09       212       1,169.6
+Brooklyn         10       308       1,245.5
+Brooklyn         11       400       1,157.6
+Brooklyn         12       353       1,196.0
+Brooklyn         13       362       1,217.4
+Brooklyn         14       327         965.9
+Brooklyn         15       293       1,092.5
+Brooklyn         16       335         947.9
+Brooklyn         17       465       1,092.0
+Brooklyn         18       484       1,345.2
+Brooklyn         19       461       1,340.6
+Brooklyn         20       554       1,187.6
+Brooklyn         21       544         984.9
+Brooklyn         22       535         808.5
+Brooklyn         23       378         579.3
+Manhattan        00    28,754         872.1
+Manhattan        01    25,133       1,341.7
+Manhattan        02    21,439       2,159.0
+Manhattan        03    15,968       4,420.3
+Manhattan        04     8,819       9,934.2
+Manhattan        05     3,560       7,754.0
+Manhattan        06     3,322       3,446.5
+Manhattan        07     4,660       2,188.3
+Manhattan        08     7,473       1,513.3
+Manhattan        09    11,134       1,162.6
+Manhattan        10    16,083         828.9
+Manhattan        11    20,144         750.1
+Manhattan        12    21,756         708.5
+Manhattan        13    21,493         738.8
+Manhattan        14    21,103         626.0
+Manhattan        15    19,269         590.0
+Manhattan        16    18,110         461.8
+Manhattan        17    20,016         586.0
+Manhattan        18    20,630         792.9
+Manhattan        19    17,767         923.2
+Manhattan        20    15,442         895.4
+Manhattan        21    13,696         848.5
+Manhattan        22    11,937         769.9
+Manhattan        23     6,701         487.8
+Queens           00       710       3,377.6
+Queens           01       467       3,918.2
+Queens           02       381       6,287.8
+Queens           03       369       9,256.1
+Queens           04       354      14,154.3
+Queens           05       336       8,396.7
+Queens           06       491       4,772.2
+Queens           07       550       3,505.7
+Queens           08       500       2,954.6
+Queens           09       640       2,030.0
+Queens           10       848       1,707.3
+Queens           11     1,014       1,418.0
+Queens           12     1,006       1,595.1
+Queens           13     1,176       1,479.8
+Queens           14     1,379       1,328.8
+Queens           15     1,305       1,298.5
+Queens           16     1,464       1,107.9
+Queens           17     1,749       1,457.0
+Queens           18     1,411       1,706.9
+Queens           19     1,062       1,913.0
+Queens           20     1,088       1,576.1
+Queens           21     1,341       1,495.6
+Queens           22     1,316       1,171.4
+Queens           23       397         644.4
+Staten Island    01         1       1,740.0
+Staten Island    02         1         199.0
+Staten Island    03         5      13,089.8
+Staten Island    11         1         823.0
+Staten Island    17         2         540.0
+Staten Island    21         1       5,940.0
+
+Key observation: wait-times peak in the early-morning hours (03:00–05:00) across all
+boroughs, likely because activity drops off and drivers wait longer between fares.
+Wait-times are shortest in the afternoon/evening peak hours (14:00–17:00) in Manhattan.
+
+--------------------------------------------------------------------------------
+## (d) Outlier detection — trips above 95th-percentile normalised duration
+--------------------------------------------------------------------------------
+
+Normalisation: duration (seconds) / Haversine distance (km).
+95th-percentile threshold and outlier count per starting borough:
+
+Borough          Threshold (s/km)   Outlier trips
+Bronx                  6,315.48               9
+Brooklyn                 455.19             804
+Manhattan                490.47          19,461
+Queens                   302.06           1,166
+Staten Island         74,205.42               0
+
+(Staten Island has only 8 trips in the sample; the 95th-percentile threshold
+equals its maximum normalised duration, so no trip exceeds it.)
+
+--------------------------------------------------------------------------------
+## (e) Rush-hour detection — average normalised duration per hour (descending)
+--------------------------------------------------------------------------------
+
+Hour   Avg normalised duration (s/km)
+  11                          709.58   <- highest (midday congestion)
+  05                          707.24
+  06                          530.46
+  17                          450.11   <- evening rush
+  18                          395.68
+  04                          389.25
+  03                          384.53
+  00                          369.13
+  14                          367.24
+  15                          365.60
+  19                          363.48
+  10                          355.80
+  02                          355.04
+  13                          349.45
+  08                          343.86
+  16                          329.55
+  21                          324.86
+  01                          323.64
+  22                          318.55
+  12                          318.10
+  20                          297.50
+  23                          284.59
+  09                          258.92
+  07                          246.75   <- lowest (early-morning, light traffic)
+
+Key observation: 17:00–18:00 stands out as a clear evening rush. Hour 11 and 05–06
+show elevated values, likely from midday congestion and early-morning airport runs
+(longer distances, heavier traffic relative to displacement). Hour 07 is the fastest
+hour despite being early morning — consistent with light traffic before peak commute.
+
+--------------------------------------------------------------------------------
+## Spark Runtimes
+--------------------------------------------------------------------------------
+
+All timings on a local machine (Spark 4.0.2, local mode, 20 partitions).
+
+  cell-04 (load + cache 433,927 trips):   ~45 s
+  cell-06 (a) same-borough stats:         ~3 min
+  cell-07 (b) cross-borough stats:        ~3 min
+  cell-08 (sessionization):               ~2 min
+  cell-09 (c) borough+hour wait-times:    ~2 min
+  cell-11 (d) outlier detection:          ~3 min
+  cell-12 (e) rush-hour analysis:         ~2 min

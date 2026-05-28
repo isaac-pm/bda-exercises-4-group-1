@@ -1,0 +1,101 @@
+BDA Exercise 4 — Problem 2 (NYC Taxi Trips) — HPC Setup
+Cluster: Aion (University of Luxembourg)
+
+══════════════════════════════════════════════════════════════
+1. FIRST-TIME ENVIRONMENT SETUP  (do this once on the login node)
+══════════════════════════════════════════════════════════════
+
+# 1a. Install Miniforge (skip if already installed)
+cd $HOME
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+bash Miniforge3-Linux-x86_64.sh -b -p $HOME/miniforge3
+$HOME/miniforge3/bin/conda init bash
+source ~/.bashrc
+conda config --set auto_activate_base false
+
+# Log out and back in so conda lands on PATH.
+
+# 1b. Create the conda environment
+conda create -n bda-taxi python=3.11 -y
+conda activate bda-taxi
+
+# Java — PySpark requires a JDK. Installing via conda avoids needing a module.
+conda install -c conda-forge openjdk=21 -y
+
+# PySpark 4.x and Shapely via pip
+pip install pyspark==4.0.0 shapely
+
+# Quick smoke test
+python -c "import pyspark; print('PySpark', pyspark.__version__)"
+python -c "from shapely.geometry import Point; print('Shapely ok')"
+java -version
+
+══════════════════════════════════════════════════════════════
+2. DATA FILES REQUIRED
+══════════════════════════════════════════════════════════════
+
+The DATA_DIR variable in run_taxi.slurm (see section 4) must point to a
+directory containing:
+
+  trip_data-part1.csv
+  trip_data-part2.csv
+  trip_data-part3.csv
+  trip_data-part4.csv
+  nyc-borough-boundaries-polygon.geojson.json
+
+Default value in the SLURM script:
+  $HOME/bda-exercises-4-group-1/data/problem_2
+
+══════════════════════════════════════════════════════════════
+3. RUNNING INTERACTIVELY  (development / short tests)
+══════════════════════════════════════════════════════════════
+
+# Request an exclusive batch node
+salloc -N 1 --exclusive --mem=0 -p batch -t 02:00:00
+
+# On the allocated compute node:
+conda activate bda-taxi
+export SPARK_DRIVER_MEMORY=200g
+python solutions/problem_2/RunTaxiTrips.py /path/to/data/problem_2
+
+══════════════════════════════════════════════════════════════
+4. SUBMITTING AS A BATCH JOB  (recommended for the full dataset)
+══════════════════════════════════════════════════════════════
+
+# Edit DATA_DIR inside run_taxi.slurm if your data lives elsewhere, then:
+cd $HOME/bda-exercises-4-group-1
+sbatch solutions/problem_2/run_taxi.slurm
+
+# Monitor progress
+squeue -u $USER
+tail -f slurm-bda-taxi-*.out
+
+══════════════════════════════════════════════════════════════
+5. OUTPUT FILES
+══════════════════════════════════════════════════════════════
+
+  slurm-bda-taxi-<jobid>.out   SLURM stdout (mirrors the log below)
+  slurm-bda-taxi-<jobid>.err   SLURM stderr (Spark/JVM warnings)
+  solutions/problem_2/taxi_YYYYMMDD_HHMMSS.log
+                               Per-run structured log, flushed line-by-line.
+                               Survives a mid-run crash — inspect it to see
+                               how far the job reached.
+
+══════════════════════════════════════════════════════════════
+6. NOTES
+══════════════════════════════════════════════════════════════
+
+- Aion batch nodes have 128 cores and 256 GB RAM. The SLURM script uses
+  --exclusive and --mem=0 to claim the full node.
+
+- SPARK_DRIVER_MEMORY is computed automatically as (total RAM - 16 GB)
+  to leave headroom for the OS and kernel.
+
+- SPARK_CORES defaults to * (all cores). Override via the env var if needed:
+    export SPARK_CORES=64
+
+- PySpark runs in local[*] mode (single-node, no YARN/HDFS needed).
+
+- If Aion's partition name differs from "batch", update the #SBATCH --partition
+  line in run_taxi.slurm. Check available partitions with:
+    sinfo -o "%P %a %l %D %t %N"
