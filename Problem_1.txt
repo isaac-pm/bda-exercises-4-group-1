@@ -1,88 +1,219 @@
-===================================================
-PROBLEM 1 — Marvel Universe Social Network Analysis
-Big Data Analytics — Summer Semester 2026
-===================================================
+===========================================================================
+PROBLEM 1 - Marvel Universe Social Network Analysis
+Big Data Analytics - Summer Semester 2026 - University of Luxembourg
+Exercise Sheet #4
+===========================================================================
 
-HOW TO RUN
-----------
-1. Upload the dataset files to the IRIS cluster:
-   - nodes.csv, edges.csv, hero-edge.csv → ./data/problem_1/kaggle-marvel-universe
+TEAM MEMBERS
+------------
+- Esteban Gerardo Leiva Montenegro  (esteban.leiva.001@student.uni.lu)
+- Isaac Fabian Palma Medina         (isaac.palma.001@student.uni.lu)
+- Jose Valdivia Aguero              (jose.valdivia.001@student.uni.lu)
 
-2. Submit the notebook as a Spark job on IRIS:
-   spark-submit --packages graphframes:graphframes:0.8.2-spark3.1-s_2.12 \
-                --master yarn \
-                Exercise1_Marvel_GraphAnalysis.ipynb
+DATASET
+-------
+Marvel Universe Social Network (Kaggle)
+- nodes.csv        (node, type): vertex name and type (hero or comic)
+- edges.csv        (hero, comic): which heroes appear in which comics
+- hero-network.csv (hero1, hero2): hero pairs co-appearing in the same comics
 
-   Or run interactively via Jupyter on the cluster with:
-   --config spark.jars.packages=graphframes:graphframes:0.8.2-spark3.1-s_2.12
+ENVIRONMENT / HOW TO RUN
+------------------------
+Executed on the IRIS HPC cluster (University of Luxembourg) with Apache
+Spark 4.0.1 (Scala 2.13, Java 21) and GraphFrames 0.11.0.
 
-3. sbatch run_spark.sh
+  1. Interactive allocation:
+       srun -p batch --time=01:00:00 -N 1 -c 12 --pty bash -i
 
+  2. Load modules:
+       module load env/development/2024a
+       module load devel/Spark/4.0.1-foss-2024a-Java-21
+       module load lang/Python/3.12.3-GCCcore-13.3.0
+
+  3. Install client packages (once):
+       pip install --user jupyter
+       pip install --user graphframes-py==0.11.0
+
+  4. Environment + start Jupyter on the compute node:
+       export PATH=$HOME/.local/bin:$PATH
+       export SPARK_HOME=$EBROOTSPARK
+       export PYTHONPATH=$SPARK_HOME/python:$(ls $SPARK_HOME/python/lib/py4j-*-src.zip):$PYTHONPATH
+       jupyter notebook --no-browser --ip=0.0.0.0 --port=8888
+
+  5. SSH tunnel from the local machine (replace the node name):
+       ssh -L 8889:iris-<NNN>.iris-cluster.uni.lux:8888 iris-cluster
+       Then open http://localhost:8889/?token=<token>
+
+The SparkSession loads GraphFrames via the Scala-2.13 / Spark-4 package
+(matching the cluster's Spark build):
+
+       .config("spark.jars.packages",
+               "io.graphframes:graphframes-spark4_2.13:0.11.0")
+
+===========================================================================
+RESULTS
+===========================================================================
+
+(a) VERTEX COMPARISON                                            [4 Points]
+---------------------------------------------------------------------------
+    Total edges (hero, comic):                       96,104
+    Distinct vertices extracted from edges.csv:      19,090
+    Total vertices in nodes.csv:                     19,090
+        of which heroes:                              6,439
+        of which comics:                             12,651
+    Vertices in edges.csv but missing from nodes.csv:     1
+    Vertices in nodes.csv but missing from edges.csv:     1
+
+    Finding: both vertex sets have the same size (19,090) and 19,089 of the
+    names match exactly. The only difference is ONE vertex - the Spider-Man
+    entry (SPIDER-MAN/PETER PARKER) is stored with a slightly different text
+    string in each file (a formatting/whitespace inconsistency in the
+    dataset). It therefore appears once as "only in edges.csv" and once as
+    "only in nodes.csv", but it refers to the same hero. Conceptually the
+    two vertex sets are identical.
+
+(b) CONNECTED COMPONENTS                                         [2 Points]
+---------------------------------------------------------------------------
+    Total number of connected components:            22
+    Largest component size:                          19,029 vertices
+    Fraction of vertices in the largest component:   99.68%
+
+    Finding: the Marvel Universe is essentially one giant connected
+    component covering 99.68% of all vertices (heroes are linked through
+    shared comics). The remaining 21 components are tiny isolated groups
+    (sizes 2-11), accounting for only ~0.32% of vertices.
+
+(c) STRUCTURAL METRICS                                           [2 Points]
+---------------------------------------------------------------------------
+    Vertices:                                        19,090
+    Edges:                                           96,104
+    Graph density:                                   0.00052745
+    Degree - mean:                                   10.07
+    Degree - stddev:                                 34.99
+    Degree - min / max:                              1 / 1,577
+    Highest-degree vertex:                           SPIDER-MAN/PETER PARKER (1,577)
+    Average clustering coefficient:                  0.000000
+    Approximate average path length (UNDIRECTED):    4.4306  (min 1, max 10)
+
+    Degree distribution: strongly right-skewed (power-law / long tail).
+    3,275 vertices have degree 1 and the count falls off steeply, while a
+    few hubs reach degrees in the hundreds/thousands (Spider-Man 1,577,
+    Captain America 1,334, Iron Man 1,150). Typical of real-world networks.
+
+    Clustering coefficient = 0: this is the CORRECT result for the graph of
+    part (a), because it is bipartite (hero <-> comic). A bipartite graph
+    contains no triangles by definition, so every local clustering
+    coefficient is 0. (Measured on the hero-to-hero projection - the actual
+    social network - the clustering coefficient is high, as expected for a
+    social graph.)
+
+    Average path length: 4.43 hops on average (sampled BFS from 381 landmark
+    vertices, ~2% of the graph). The distribution peaks at distances 4 and 5
+    and never exceeds 10:
+        distance 1:       3,283 pairs
+        distance 2:     288,550
+        distance 3:     730,803
+        distance 4:   2,889,477
+        distance 5:   2,412,813
+        distance 6:     767,643
+        distance 7:     138,112
+        distance 8:      18,049
+        distance 9:         860
+        distance 10:         78
+    Despite having ~19,000 vertices, almost any two are reachable within ~4-5
+    hops: a clear SMALL-WORLD structure.
+
+    Graph type: VERY SPARSE but SMALL-WORLD. Density is ~0.0005 (far below
+    1), the degree distribution follows a power law dominated by a few hubs,
+    almost all vertices form one giant component, and the average path length
+    is short (~4.4) - a sparse, hub-centred, small-world network.
+
+(d) PAGERANK vs DEGREE (top-25 per vertex type)                  [2 Points]
+---------------------------------------------------------------------------
+    PageRank computed on the undirected graph, resetProbability = 0.15,
+    maxIter = 10. Degree ranking uses out-degree for heroes (number of
+    comics they appear in) and in-degree for comics (number of heroes in
+    them); on this graph total degree equals the relevant directional degree
+    per type.
+
+    Top hero by PageRank:    CAPTAIN AMERICA        (PR = 103.89)
+    Top comic by PageRank:   COC 1                  (PR =   9.55)
+    Top hero by degree:      CAPTAIN AMERICA        (degree = 1,334)
+    Top comic by degree:     COC 1                  (degree =   111)
+
+    Top-5 heroes by PageRank:
+        1. CAPTAIN AMERICA          103.89
+        2. IRON MAN/TONY STARK       91.39
+        3. HULK/DR. ROBERT BRUCE     75.72
+        4. THING/BENJAMIN J. GRIMM   72.11
+        5. WOLVERINE/LOGAN           66.92
+
+    Comparison (heroes): the top of both rankings agrees (Captain America,
+    Iron Man), but PageRank and degree diverge for several heroes, which is
+    exactly the point of the comparison - PageRank measures the QUALITY of
+    connections (being linked to central comics/heroes), not just the
+    QUANTITY. Notable gaps among the top-25 by PageRank:
+        - HULK:               degree rank 7  -> PageRank rank 3
+        - PUNISHER II:        degree rank 45 -> PageRank rank 18
+        - CAPTAIN BRITAIN:    degree rank 46 -> PageRank rank 22
+        - SUB-MARINER:        degree rank 21 -> PageRank rank 13
+    These heroes have comparatively few connections, but those connections
+    are to highly central hubs, so PageRank ranks them higher than raw
+    degree does. Conversely, some high-degree heroes (e.g. Scarlet Witch,
+    Beast) drop slightly under PageRank.
+
+(e) HERO CO-OCCURRENCE PAIRS                                     [2 Points]
+---------------------------------------------------------------------------
+    Pairs computed from edges.csv (distinct, canonical order):  171,644
+    Rows in hero-network.csv (with multiplicity):               574,467
+    Distinct normalized pairs in hero-network.csv:              167,219
+    Pairs in BOTH:                                              138,450
+    Only in our computation (not in hero-network.csv):           33,194
+    Only in hero-network.csv (not in our computation):           28,769
+
+    Finding: both datasets describe the same underlying hero-to-hero
+    network - the 138,450 shared pairs represent ~81% of our pairs and ~83%
+    of the file's pairs. They are NOT identical, however, and neither is a
+    strict subset of the other. The mismatches are explained by:
+      (1) Name-string inconsistencies in the raw data (the same Spider-Man
+          discrepancy found in part (a), and similar formatting differences),
+          which prevent some pairs from matching exactly.
+      (2) hero-network.csv being generated from a slightly different
+          processing of the comic appearances than edges.csv, so a number of
+          pairs exist on one side only.
+    hero-network.csv also stores one row per co-appearance (574,467 rows),
+    which collapses to 167,219 unique unordered pairs after normalization.
+
+===========================================================================
+SPARK RUNTIMES
+===========================================================================
+    (a)   Load + vertex comparison:                9.31 s
+    (b)   Connected components:                   23.86 s
+    (c.1) Degree distribution:                     1.01 s
+    (c.2) Clustering coefficient:                 ~2 s
+    (c.3) Average path length (BFS sample):      245.30 s
+    (d)   PageRank computation:                    2.87 s
+    (e)   Hero pair generation:                    1.67 s
+
+    (Cluster: Spark 4.0.1, local[*] on one IRIS node, 12 cores, 8 GB driver.
+     c.3 is the most expensive step: a Pregel-style BFS from 381 landmarks
+     over the undirected graph, materializing ~7.25M shortest-path entries.)
+
+===========================================================================
 AI USAGE
---------
+===========================================================================
 Claude (claude.ai) was used throughout this exercise.
 Key prompting steps:
-- Understanding the GraphFrames API vs GraphX Scala API from lectures
-- Understanding the Pregel BFS algorithm for average path length
-  (why +1 is added to maps, what the map stores, when the algorithm stops)
-- Understanding PageRank convergence and the role of reset probability epsilon
-- Understanding connected components — minimum-state propagation algorithm
-- Understanding clustering coefficient formula and edge case for degree < 2
-
-RESULTS (to be filled after running on cluster)
------------------------------------------------
-(a) VERTEX COMPARISON
-    Vertices from edges.csv:         [fill after run]
-    Vertices in nodes.csv:           [fill after run]
-    Missing from nodes.csv:          [fill after run]
-    Missing from edges.csv:          [fill after run]
-
-(b) CONNECTED COMPONENTS
-    Total components:                [fill after run]
-    Largest component size:          [fill after run]
-    Fraction of vertices in largest: [fill after run]%
-
-(c) STRUCTURAL METRICS
-    Graph density:                   [fill after run]
-    Average degree:                  [fill after run]
-    Average clustering coefficient:  [fill after run]
-    Approximate avg path length:     [fill after run]
-    Graph type: SPARSE, small-world structure (expected)
-
-(d) PAGERANK
-    Top hero by PageRank:            [fill after run]
-    Top comic by PageRank:           [fill after run]
-    Key difference vs degree:        Heroes connected to central
-                                     comics rank higher than heroes
-                                     with many connections to obscure comics
-
-(e) HERO CO-OCCURRENCE
-    Pairs computed from edges.csv:   [fill after run]
-    Pairs in hero-edge.csv:          [fill after run]
-    Pairs in both:                   [fill after run]
-    Only in our computation:         [fill after run]
-    Only in hero-edge.csv:           [fill after run]
-
-RUNTIMES (to be filled after running on cluster)
--------------------------------------------------
-(a) Load + vertex comparison:        [fill] seconds
-(b) Connected components:            [fill] seconds
-(c.1) Degree distribution:           [fill] seconds
-(c.2) Clustering coefficient:        [fill] seconds
-(c.3) Avg path length (BFS sample):  [fill] seconds
-(d) PageRank:                        [fill] seconds
-(e) Hero pairs + comparison:         [fill] seconds
-
-# AI usage
-
-You are a professor specializing in big data analytics. You are teaching a student the material for the exam by explaining key points from the syllabus.
-
-# Goal
-To ensure the student understands the material so they can apply these types of algorithms, preparing them for the exam.
-
-# Instructions
-Analyze the presentation (BDA-S26.Ch6.pdf), which corresponds to the material provided by the professor, to become an expert on the syllabus and teach it effectively.
-
-Analyze the script (RunGraphFrames.ipynb) and use it as a reference to guide the student to specific functions within the code, helping them to understand its context. You will also explain how these algorithms work and their underlying principles in a practical way.
-
-Create a lesson plan and begin.
+- Setting up the IRIS environment and matching the GraphFrames package to
+  the cluster's Spark 4.0.1 / Scala 2.13 build (io.graphframes 0.11.0).
+- Understanding the GraphFrames API vs the GraphX Scala API from the lectures.
+- Understanding the connected-components minimum-state propagation algorithm.
+- Understanding the clustering-coefficient formula and the degree < 2 edge
+  case, and why a bipartite graph yields a clustering coefficient of 0.
+- Understanding the Pregel-style BFS used for average path length, and why
+  the directed bipartite graph must be made undirected to measure it.
+- Understanding PageRank convergence, the role of the reset probability,
+  and why the graph must be undirected to rank heroes meaningfully.
+- Solving bugs on the jupyter notebook and setting up the time loggers.
+- Formatting the report based on the results and understanding them. 
+===========================================================================
