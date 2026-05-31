@@ -1,3 +1,79 @@
+===================================================
+PROBLEM 1 — Marvel Universe Social Network Analysis
+Big Data Analytics — Summer Semester 2026
+===================================================
+
+HOW TO RUN
+----------
+1. Upload the dataset files to the IRIS cluster:
+   - nodes.csv, edges.csv, hero-edge.csv → ./data/problem_1/kaggle-marvel-universe
+
+2. Submit the notebook as a Spark job on IRIS:
+   spark-submit --packages graphframes:graphframes:0.8.2-spark3.1-s_2.12 \
+                --master yarn \
+                Exercise1_Marvel_GraphAnalysis.ipynb
+
+   Or run interactively via Jupyter on the cluster with:
+   --config spark.jars.packages=graphframes:graphframes:0.8.2-spark3.1-s_2.12
+
+3. sbatch run_spark.sh
+
+AI USAGE
+--------
+Claude (claude.ai) was used throughout this exercise.
+Key prompting steps:
+- Understanding the GraphFrames API vs GraphX Scala API from lectures
+- Understanding the Pregel BFS algorithm for average path length
+  (why +1 is added to maps, what the map stores, when the algorithm stops)
+- Understanding PageRank convergence and the role of reset probability epsilon
+- Understanding connected components — minimum-state propagation algorithm
+- Understanding clustering coefficient formula and edge case for degree < 2
+
+RESULTS (to be filled after running on cluster)
+-----------------------------------------------
+(a) VERTEX COMPARISON
+    Vertices from edges.csv:         [fill after run]
+    Vertices in nodes.csv:           [fill after run]
+    Missing from nodes.csv:          [fill after run]
+    Missing from edges.csv:          [fill after run]
+
+(b) CONNECTED COMPONENTS
+    Total components:                [fill after run]
+    Largest component size:          [fill after run]
+    Fraction of vertices in largest: [fill after run]%
+
+(c) STRUCTURAL METRICS
+    Graph density:                   [fill after run]
+    Average degree:                  [fill after run]
+    Average clustering coefficient:  [fill after run]
+    Approximate avg path length:     [fill after run]
+    Graph type: SPARSE, small-world structure (expected)
+
+(d) PAGERANK
+    Top hero by PageRank:            [fill after run]
+    Top comic by PageRank:           [fill after run]
+    Key difference vs degree:        Heroes connected to central
+                                     comics rank higher than heroes
+                                     with many connections to obscure comics
+
+(e) HERO CO-OCCURRENCE
+    Pairs computed from edges.csv:   [fill after run]
+    Pairs in hero-edge.csv:          [fill after run]
+    Pairs in both:                   [fill after run]
+    Only in our computation:         [fill after run]
+    Only in hero-edge.csv:           [fill after run]
+
+RUNTIMES (to be filled after running on cluster)
+-------------------------------------------------
+(a) Load + vertex comparison:        [fill] seconds
+(b) Connected components:            [fill] seconds
+(c.1) Degree distribution:           [fill] seconds
+(c.2) Clustering coefficient:        [fill] seconds
+(c.3) Avg path length (BFS sample):  [fill] seconds
+(d) PageRank:                        [fill] seconds
+(e) Hero pairs + comparison:         [fill] seconds
+
+# AI usage
 
 You are a professor specializing in big data analytics. You are teaching a student the material for the exam by explaining key points from the syllabus.
 
