@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH --exclusive
 #SBATCH --mem=0
-#SBATCH --time=04:00:00
+#SBATCH --time=24:00:00
 #SBATCH --output=slurm-%x-%j.out
 #SBATCH --error=slurm-%x-%j.err
 #SBATCH --partition=batch
