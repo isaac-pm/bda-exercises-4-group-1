@@ -25,7 +25,7 @@ conda install -c conda-forge openjdk=21 -y
 # PySpark 4.x and Shapely via pip
 pip install pyspark==4.0.0 shapely
 
-# Quick smoke test
+# Dependency check
 python -c "import pyspark; print('PySpark', pyspark.__version__)"
 python -c "from shapely.geometry import Point; print('Shapely ok')"
 java -version

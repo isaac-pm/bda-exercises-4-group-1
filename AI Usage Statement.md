@@ -60,16 +60,71 @@ if the job is interrupted.
 # Problem 3
 
 - Models used:
-  - XXX
+  - OpenAI GPT-5.5 thinking
 
-QX:
-
-```
+Q1: Is the planned financial-risk pipeline correct for Problem 3?
 
 ```
-
-AX:
-
+Asked for validation of the planned approach: three stock time series, three
+market-factor time series, temporal alignment, 10-trading-day returns, factor
+features, one regression model per stock, Monte Carlo simulation, and VaR/CVaR
+reporting.
 ```
 
+A1:
+
+```
+The approach is consistent with the RunMonteCarlo methodology. The important
+points are to parse the CSV files with a Spark/RDD stage, align all six series
+on shared dates, compute two-week returns with a 10-trading-day lag, use
+r, r^2, and sqrt(abs(r)) as factor features, and compute 95% VaR/CVaR from the
+lower tail of simulated returns.
+```
+
+Q2: Any advice on environment setup and CSV compatibility?
+
+```
+Asked how to keep the local setup compatible with the course workflow, including
+the BigData virtual environment, PySpark execution, StockAnalysis/Yahoo-style
+CSV files, and Date/Close parsing.
+```
+
+A2:
+
+```
+The suggested setup was to run source ~/venvs/BigData/bin/activate before local
+execution, verify the Python/PySpark versions, keep the CSV files under
+data/problem_3, parse Date and Close robustly, and store the script under
+solutions/problem_3.
+```
+
+Q3: Any suggestions for checking the Monte Carlo run?
+
+```
+Asked for advice on validating the implementation and output before relying on
+the final 1,000,000-trial experiment.
+```
+
+A3:
+
+```
+The advice was to check that all six CSV files are loaded, verify that the
+aligned row count is reasonable, confirm that the return row count is aligned
+rows minus the 10-day lag, and verify that VaR/CVaR values are generated.
+```
+
+Q4: How should the final results be interpreted and reported?
+
+```
+Asked for advice on reporting portfolio VaR/CVaR, individual stock VaR/CVaR,
+and the comparison between correlated and independent market-factor sampling.
+```
+
+A4:
+
+```
+The guidance was to include the selected assets, data locations, aligned date
+range, row counts, simulation settings, Spark runtimes, portfolio VaR/CVaR,
+per-stock VaR/CVaR, and a short interpretation of best/worst stock based mainly
+on downside risk.
 ```

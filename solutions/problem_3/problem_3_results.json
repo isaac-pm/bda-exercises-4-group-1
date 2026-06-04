@@ -1,0 +1,266 @@
+{
+  "alignment": {
+    "end": "2026-06-03",
+    "rows": 1255,
+    "start": "2021-06-04"
+  },
+  "data_dir": "data/problem_3",
+  "data_source": "Yahoo Finance chart API daily historical prices; equivalent public CSV history source.",
+  "download_sources": {
+    "AAPL": "https://query1.finance.yahoo.com/v8/finance/chart/AAPL?period1=1622764800&period2=1780531200&interval=1d&events=history",
+    "DOWJONES": "https://query1.finance.yahoo.com/v8/finance/chart/%5EDJI?period1=1622764800&period2=1780531200&interval=1d&events=history",
+    "MSFT": "https://query1.finance.yahoo.com/v8/finance/chart/MSFT?period1=1622764800&period2=1780531200&interval=1d&events=history",
+    "NASDAQ100": "https://query1.finance.yahoo.com/v8/finance/chart/%5ENDX?period1=1622764800&period2=1780531200&interval=1d&events=history",
+    "NVDA": "https://query1.finance.yahoo.com/v8/finance/chart/NVDA?period1=1622764800&period2=1780531200&interval=1d&events=history",
+    "SP500": "https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?period1=1622764800&period2=1780531200&interval=1d&events=history"
+  },
+  "environment": {
+    "python": "3.12.3",
+    "spark": "4.1.1"
+  },
+  "factor_summary": {
+    "covariance": [
+      [
+        0.000955315984913398,
+        0.00120784524186827,
+        0.0007695458890983525
+      ],
+      [
+        0.00120784524186827,
+        0.0017184310992772788,
+        0.0008488972872979153
+      ],
+      [
+        0.0007695458890983525,
+        0.0008488972872979153,
+        0.0007657214809632246
+      ]
+    ],
+    "factor_columns": [
+      "SP500_return",
+      "NASDAQ100_return",
+      "DOWJONES_return"
+    ],
+    "means": {
+      "DOWJONES_return": 0.003502511161759123,
+      "NASDAQ100_return": 0.007044237964464329,
+      "SP500_return": 0.005116688353069193
+    },
+    "stddevs": {
+      "DOWJONES_return": 0.027671672897806966,
+      "NASDAQ100_return": 0.04145396361359525,
+      "SP500_return": 0.030908186373732736
+    }
+  },
+  "factors": [
+    {
+      "label": "S&P 500",
+      "name": "SP500",
+      "symbol": "^GSPC"
+    },
+    {
+      "label": "Nasdaq 100",
+      "name": "NASDAQ100",
+      "symbol": "^NDX"
+    },
+    {
+      "label": "Dow Jones Industrial Average",
+      "name": "DOWJONES",
+      "symbol": "^DJI"
+    }
+  ],
+  "model_stats": {
+    "AAPL_return": {
+      "coefficients": [
+        0.20382701792858196,
+        -2.1086680940057154,
+        -0.11263086039458914,
+        0.8129813133098012,
+        -1.3098744647922174,
+        0.12532154375759808,
+        -0.07245675331349026,
+        0.8597829933382474,
+        0.05721854275255576
+      ],
+      "intercept": -0.007004717917127133,
+      "r2": 0.5521563426681715,
+      "rmse": 0.035006283298629565
+    },
+    "MSFT_return": {
+      "coefficients": [
+        -0.6281606566660046,
+        7.468498034981585,
+        0.04441493493232599,
+        1.3408096684317072,
+        -1.4117702551886884,
+        -0.053604587438964665,
+        0.09035316248739728,
+        -5.565996160158129,
+        0.017378395438709976
+      ],
+      "intercept": -0.0013486232997628705,
+      "r2": 0.6427613404799393,
+      "rmse": 0.029327293394584897
+    },
+    "NVDA_return": {
+      "coefficients": [
+        1.4368524619767546,
+        -8.407914940178175,
+        -0.012481160153204674,
+        1.648321749320897,
+        0.1300380857367046,
+        0.07768279380038148,
+        -1.5780656699908864,
+        14.10046420453466,
+        -0.11876998434384052
+      ],
+      "intercept": 0.013461602351894728,
+      "r2": 0.6267322315337668,
+      "rmse": 0.06119171850626426
+    }
+  },
+  "monte_carlo": {
+    "correlated": {
+      "independent_factors": false,
+      "label": "correlated_market_factors",
+      "risk_metrics": {
+        "AAPL_return_pred": {
+          "cvar_95": -0.07333712024292291,
+          "mean": 0.008407765205646733,
+          "var_95": -0.05388209927454269
+        },
+        "MSFT_return_pred": {
+          "cvar_95": -0.07448703370096331,
+          "mean": 0.005541982935772664,
+          "var_95": -0.059661288426097546
+        },
+        "NVDA_return_pred": {
+          "cvar_95": -0.14257900813694072,
+          "mean": 0.02489492083902945,
+          "var_95": -0.1058012872137941
+        },
+        "portfolio_return_pred": {
+          "cvar_95": -0.0953899921461434,
+          "mean": 0.012948222993482906,
+          "var_95": -0.07217099381755132
+        }
+      },
+      "runtime_seconds": 3.755221837986028,
+      "trials": 1000000
+    },
+    "independent": {
+      "independent_factors": true,
+      "label": "independent_market_factors",
+      "risk_metrics": {
+        "AAPL_return_pred": {
+          "cvar_95": -0.05906193914342288,
+          "mean": 0.008388813829399823,
+          "var_95": -0.04484694169572048
+        },
+        "MSFT_return_pred": {
+          "cvar_95": -0.12654091341979526,
+          "mean": 0.00559344808082186,
+          "var_95": -0.09711393072654578
+        },
+        "NVDA_return_pred": {
+          "cvar_95": -0.16365099451665596,
+          "mean": 0.024881512379666775,
+          "var_95": -0.1241820555991282
+        },
+        "portfolio_return_pred": {
+          "cvar_95": -0.09970710290771344,
+          "mean": 0.012954591429962798,
+          "var_95": -0.07604499868941329
+        }
+      },
+      "runtime_seconds": 2.7722118830133695,
+      "trials": 1000000
+    },
+    "n_partitions": 10,
+    "n_trials": 1000000,
+    "portfolio_weights": "Equal weights, 1/3 each stock.",
+    "quantile_error": 0.0,
+    "seed": 42
+  },
+  "portfolio": [
+    {
+      "label": "Apple Inc.",
+      "name": "AAPL",
+      "symbol": "AAPL"
+    },
+    {
+      "label": "Microsoft Corp.",
+      "name": "MSFT",
+      "symbol": "MSFT"
+    },
+    {
+      "label": "NVIDIA Corp.",
+      "name": "NVDA",
+      "symbol": "NVDA"
+    }
+  ],
+  "returns": {
+    "end": "2026-06-03",
+    "lag_trading_days": 10,
+    "rows": 1245,
+    "start": "2021-06-18"
+  },
+  "series_stats": {
+    "AAPL": {
+      "max_date": "2026-06-03",
+      "mean_close": 193.31970510900732,
+      "min_date": "2021-06-04",
+      "path": "data/problem_3/stocks/AAPL.csv",
+      "rows": 1255
+    },
+    "DOWJONES": {
+      "max_date": "2026-06-03",
+      "mean_close": 38490.512644733564,
+      "min_date": "2021-06-04",
+      "path": "data/problem_3/factors/DOWJONES.csv",
+      "rows": 1255
+    },
+    "MSFT": {
+      "max_date": "2026-06-03",
+      "mean_close": 363.3356891768862,
+      "min_date": "2021-06-04",
+      "path": "data/problem_3/stocks/MSFT.csv",
+      "rows": 1255
+    },
+    "NASDAQ100": {
+      "max_date": "2026-06-03",
+      "mean_close": 17683.63776145418,
+      "min_date": "2021-06-04",
+      "path": "data/problem_3/factors/NASDAQ100.csv",
+      "rows": 1255
+    },
+    "NVDA": {
+      "max_date": "2026-06-03",
+      "mean_close": 82.19351438469145,
+      "min_date": "2021-06-04",
+      "path": "data/problem_3/stocks/NVDA.csv",
+      "rows": 1255
+    },
+    "SP500": {
+      "max_date": "2026-06-03",
+      "mean_close": 5109.980205350473,
+      "min_date": "2021-06-04",
+      "path": "data/problem_3/factors/SP500.csv",
+      "rows": 1255
+    }
+  },
+  "stock_interpretation": {
+    "best_stock": "AAPL",
+    "criterion": "Ranked primarily by less negative/more negative 95% CVaR, then VaR and mean return.",
+    "worst_stock": "NVDA"
+  },
+  "timings": {
+    "alignment_returns_seconds": 1.6077787919784896,
+    "correlated_simulation_seconds": 3.755221837986028,
+    "independent_simulation_seconds": 2.7722118830133695,
+    "load_parse_seconds": 5.312803705979604,
+    "model_training_seconds": 1.2820866460097022,
+    "total_seconds": 17.268313449982088
+  },
+  "training_rows": 1245
+}

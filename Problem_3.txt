@@ -1,0 +1,96 @@
+Problem 3 - Financial Risk Analysis
+
+How to run
+1. cd /home/berserker/2_Studies/2/Big_Data/Assignment_4/bda-exercises-4-group-1
+2. source ~/venvs/BigData/bin/activate
+3. Run the full experiment with:
+   python solutions/problem_3/problem_3_monte_carlo.py --data-dir data/problem_3 --n-trials 1000000 --n-partitions 10 --output-json solutions/problem_3/problem_3_results.json
+4. Add --download-data to refresh the CSV files before running.
+
+Implementation files
+- Main script: solutions/problem_3/problem_3_monte_carlo.py
+- Final JSON output: solutions/problem_3/problem_3_results.json
+
+Environment used
+- Python: 3.12.3
+- PySpark/Spark: 4.1.1
+- Virtual environment: source ~/venvs/BigData/bin/activate
+
+Selected portfolio
+- AAPL: Apple Inc.
+- MSFT: Microsoft Corp.
+- NVDA: NVIDIA Corp.
+- Portfolio weights: equal weights, 1/3 each stock.
+
+Market factors
+- SP500: S&P 500 (^GSPC)
+- NASDAQ100: Nasdaq 100 (^NDX)
+- DOWJONES: Dow Jones Industrial Average (^DJI)
+
+Input data
+- Source: Yahoo Finance chart API daily historical prices, used as an equivalent public historical CSV source.
+- Download period requested: 2021-06-04 to 2026-06-04.
+- Stock CSVs: data/problem_3/stocks/AAPL.csv, data/problem_3/stocks/MSFT.csv, data/problem_3/stocks/NVDA.csv
+- Factor CSVs: data/problem_3/factors/SP500.csv, data/problem_3/factors/NASDAQ100.csv, data/problem_3/factors/DOWJONES.csv
+- The script downloads JSON from the chart API and stores local CSV files with Date, Open, High, Low, Close, Adj Close, and Volume columns.
+
+Data quality and temporal alignment
+- Rows per file before alignment: 1,255 for each of AAPL, MSFT, NVDA, SP500, NASDAQ100, and DOWJONES.
+- Common aligned date range: 2021-06-04 to 2026-06-03.
+- Aligned rows: 1,255.
+- Return rows after 10-trading-day lag: 1,245.
+- Two-week returns are computed as close_t / close_{t-10} - 1.
+
+Modeling methodology
+- Each CSV is first parsed through a Spark RDD stage, then converted to a DataFrame for Spark ML.
+- Factor features are built from each factor return r as r, r^2, and sqrt(abs(r)).
+- The three factors therefore produce 9 features per row.
+- One Spark ML LinearRegression model is trained for each stock return.
+- The correlated-factor simulation samples from MultivariateNormal(mu, Sigma), where mu and Sigma are the historical factor-return mean vector and covariance matrix.
+- The independent-factor simulation samples each factor separately from Normal(mu_j, sigma_j), ignoring off-diagonal covariance terms.
+- VaR_95 is the lower 5% quantile of simulated two-week returns.
+- CVaR_95 is the average simulated two-week return at or below VaR_95.
+
+Monte Carlo settings
+- Trials: 1,000,000.
+- Partitions: 10.
+- Random seed: 42.
+- Quantile error: 0.0.
+
+Correlated-factor portfolio results
+- Mean two-week portfolio return: 0.012948 (1.2948%).
+- VaR_95: -0.072171 (-7.2171%).
+- CVaR_95: -0.095390 (-9.5390%).
+
+Individual stock results under correlated factors
+- AAPL: mean = 0.008408 (0.8408%), VaR_95 = -0.053882 (-5.3882%), CVaR_95 = -0.073337 (-7.3337%).
+- MSFT: mean = 0.005542 (0.5542%), VaR_95 = -0.059661 (-5.9661%), CVaR_95 = -0.074487 (-7.4487%).
+- NVDA: mean = 0.024895 (2.4895%), VaR_95 = -0.105801 (-10.5801%), CVaR_95 = -0.142579 (-14.2579%).
+
+Best/worst stock interpretation
+- Best investment by downside-risk criterion: AAPL, because it has the least negative CVaR and VaR among the three stocks.
+- Worst investment by downside-risk criterion: NVDA, because it has the most negative CVaR and VaR, even though its mean simulated return is the highest.
+- This interpretation prioritizes downside risk over expected return because the assignment asks for VaR/CVaR-based risk analysis.
+
+Independent-factor portfolio results
+- Mean two-week portfolio return: 0.012955 (1.2955%).
+- VaR_95: -0.076045 (-7.6045%).
+- CVaR_95: -0.099707 (-9.9707%).
+
+Comparison of correlated vs independent factors
+- The independent-factor assumption produced a slightly worse portfolio VaR and CVaR.
+- Correlated factors: VaR_95 = -7.2171%, CVaR_95 = -9.5390%.
+- Independent factors: VaR_95 = -7.6045%, CVaR_95 = -9.9707%.
+- In this run, removing factor correlations increased estimated downside risk by about 0.39 percentage points in VaR and 0.43 percentage points in CVaR.
+
+Spark runtimes from the full run
+- Load/parse: 5.313 seconds.
+- Alignment/returns: 1.608 seconds.
+- Model training: 1.282 seconds.
+- Correlated simulation: 3.755 seconds.
+- Independent simulation: 2.772 seconds.
+- Total: 17.268 seconds.
+
+AI usage
+- Platform/model: OpenAI GPT-5.5 thinking.
+- Main prompting steps: asked for validation of the Problem 3 pipeline, advice on matching the RunMonteCarlo methodology, guidance on BigData venv/PySpark compatibility, suggestions for robust CSV Date/Close parsing, output checks before the full run, and advice on reporting VaR/CVaR results and runtimes.
